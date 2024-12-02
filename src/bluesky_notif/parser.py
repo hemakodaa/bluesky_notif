@@ -35,6 +35,84 @@ class Request:
         return get["feed"]
 
 
+class PostParser:
+    def __init__(self, post: dict):
+        self._post = post
+
+    @staticmethod
+    def _default_count(count) -> int:
+        return 0 if count is None else count
+
+    def record_text(self):
+        """
+        The post's text.
+        """
+        return self.record().get("text")
+
+    def uri(self) -> str:
+        return self._post.get("uri")
+
+    def cid(self) -> str:
+        return self._post.get("cid")
+
+    def author(self) -> dict:
+        return self._post.get("author")
+
+    def record(self) -> dict:
+        """
+        Contains the post's text
+        """
+        return self._post.get("record")
+
+    def embed(self) -> dict:
+        # not all posts have this
+        embed = self._post.get("embed")
+        return {"error": "no_embed"} if embed is None else embed
+
+    def reply_count(self) -> int:
+        count = self._post.get("replyCount")
+        return PostParser._default_count(count)
+
+    def repost_count(self) -> int:
+        count = self._post.get("repostCount")
+        return PostParser._default_count(count)
+
+    def like_count(self) -> int:
+        count = self._post.get("likeCount")
+        return PostParser._default_count(count)
+
+    def quote_count(self) -> int:
+        count = self._post.get("quoteCount")
+        return PostParser._default_count(count)
+
+    def indexed_at(self):
+        return datetime.fromisoformat(self._post.get("indexedAt"))
+
+
+class ReplyParser:
+    def __init__(self, reply: dict):
+        self._reply = reply
+
+    def reply_root(self) -> dict:
+        return self._reply.get("root")
+
+    def reply_parent(self) -> dict:
+        return self._reply.get("parent")
+
+    def reply_grandparentAuthor(self) -> dict:
+        grandparent_author = self._reply.get("grandparentAuthor")
+        return (
+            {"error": "no_feed_reply_grandparentAuthor"}
+            if grandparent_author is None
+            else grandparent_author
+        )
+
+
+class ReasonParser:
+    def __init__(self, reason: dict):
+        self._reply = reason
+
+
 class FeedParser:
     """
     There are three top-level objects for every item in a 'feed' list:
@@ -67,85 +145,21 @@ class FeedParser:
         self._feed_reply = feed.get("reply")
         self._feed_reason = feed.get("reason")
 
-    @property
     def post(self):
         if self._feed_post is None:
             raise ValueError("post is not set.")
-        return self._feed_post
+        return PostParser(self._feed_post)
 
-    @property
     def reply(self) -> dict:
         return (
-            {"error": "no_feed_reply"} if self._feed_reply is None else self._feed_reply
+            ReplyParser({"error": "no_feed_reply"})
+            if self._feed_reply is None
+            else ReplyParser(self._feed_reply)
         )
 
-    @property
     def reason(self) -> dict:
         """
         We can tell if a post is a repost or not through
         reason object
         """
-        return self._feed_reason
-
-    @staticmethod
-    def default_count(count) -> int:
-        return 0 if count is None else count
-
-    def reply_root(self) -> dict:
-        return self.reply.get("root")
-
-    def reply_parent(self) -> dict:
-        return self.reply.get("parent")
-
-    def reply_grandparentAuthor(self) -> dict:
-        grandparent_author = self.reply.get("grandparentAuthor")
-        return (
-            {"error": "no_feed_reply_grandparentAuthor"}
-            if grandparent_author is None
-            else grandparent_author
-        )
-
-    def post_record_text(self):
-        """
-        The post's text.
-        """
-        return self.post_record().get("text")
-
-    def post_uri(self) -> str:
-        return self.post.get("uri")
-
-    def post_cid(self) -> str:
-        return self.post.get("cid")
-
-    def post_author(self) -> dict:
-        return self.post.get("author")
-
-    def post_record(self) -> dict:
-        """
-        Contains the post's text
-        """
-        return self.post.get("record")
-
-    def post_embed(self) -> dict:
-        # not all posts have this
-        embed = self.post.get("embed")
-        return {"error": "no_embed"} if embed is None else embed
-
-    def post_reply_count(self) -> int:
-        count = self.post.get("replyCount")
-        return FeedParser.default_count(count)
-
-    def post_repost_count(self) -> int:
-        count = self.post.get("repostCount")
-        return FeedParser.default_count(count)
-
-    def post_like_count(self) -> int:
-        count = self.post.get("likeCount")
-        return FeedParser.default_count(count)
-
-    def post_quote_count(self) -> int:
-        count = self.post.get("quoteCount")
-        return FeedParser.default_count(count)
-
-    def post_indexed_at(self):
-        return datetime.fromisoformat(self.post.get("indexedAt"))
+        return ReasonParser(self._feed_reason)
