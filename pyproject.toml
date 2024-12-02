@@ -1,0 +1,17 @@
+[project]
+name = "bluesky-notif"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [{ name = "hemakomaemi", email = "tbd@tobedetermined" }]
+dependencies = ["httpx>=0.28.0"]
+requires-python = "==3.11.*"
+readme = "README.md"
+license = { text = "MIT" }
+
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.scripts]
+start = "python src/bluesky_notif/main.py"
+parser = "python src/bluesky_notif/parser.py"
