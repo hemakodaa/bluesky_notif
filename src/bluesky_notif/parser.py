@@ -18,6 +18,11 @@ class Request:
             r = client.get(Request.APPVIEW + Request.ENDPOINT, params=Request.PARAMS)
             return json.loads(r.text)
 
+    def feed_from_file(self, filename: str):
+        with open(filename, "r", encoding="utf-8") as file:
+            read = json.load(file)
+            return read["feed"]
+
     def feed(self):
         return self._get()["feed"]
 

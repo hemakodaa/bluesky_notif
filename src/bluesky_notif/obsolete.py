@@ -1,16 +1,18 @@
 import json
 
 
-def read_file():
+def feed_from_file():
     with open("example_response.json", "r", encoding="utf-8") as file:
-        return json.load(file)
+        read = json.load(file)
+        return read["feed"]
 
 
 def feed_parser():
     """
+    OBSOLETE
     This parses "/xrpc/app.bsky.feed.getAuthorFeed" endpoint
     """
-    read = read_file()
+    read = feed_from_file()()
     feed: list = read["feed"]
     first_feed = feed[
         0
