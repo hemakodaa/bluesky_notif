@@ -15,6 +15,7 @@ distribution = false
 [tool.pdm.scripts]
 start = "python src/bluesky_notif/main.py"
 parser = "python src/bluesky_notif/parser.py"
+test = "pytest"
 
 [tool.pdm.dev-dependencies]
 test = [
