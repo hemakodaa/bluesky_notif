@@ -7,9 +7,9 @@ class Request:
     ENDPOINT = "/xrpc/app.bsky.feed.getAuthorFeed"
     PARAMS = {"includePins": "true"}
 
-    def __init__(self, bsky_at_identifier: str, limit_post=10):
+    def __init__(self, bsky_at_identifier: str, limitpost=10):
         self.actor = bsky_at_identifier
-        self.limit = limit_post
+        self.limit = limitpost
 
     def _get(self):
         Request.PARAMS["actor"] = self.actor
@@ -23,61 +23,62 @@ class Request:
             read = json.load(file)
             return read["feed"]
 
-    def feed(self):
+    def feed(self) -> list:
         return self._get()["feed"]
 
 
 class FeedParser:
-    def __init__(self, feed: list):
-        self._feed = feed
+    def __init__(self):
+        self.feed = None
 
-    def _post(self):
-        for feed in self._feed:
-            yield feed["post"]
+    def post(self, feed: dict):
+        """
+        This method mutates, maybe find a better way
+        """
+        self.feed = feed["post"]
+        if self.feed is None:
+            raise ValueError("feed is type None. Author's feed is empty")
+        
 
     def record_text(self):
         """
         The post's text.
         """
-        for record in self.record():
-            yield record["text"]
+        return self.record()["text"]
 
     def uri(self):
-        for post in self._post():
-            yield post["uri"]
+        return self.feed["uri"]
 
     def cid(self):
-        for post in self._post():
-            yield post["cid"]
+        return self.feed["cid"]
 
     def author(self):
-        for post in self._post():
-            yield post["author"]
+        return self.feed["author"]
 
     def record(self):
-        for post in self._post():
-            yield post["record"]
+        """
+        Contains the post's text
+        """
+        return self.feed["record"]
 
     def embed(self):
-        for post in self._post():
-            yield post["embed"]
+        # not all posts have this
+        try:
+            return self.feed["embed"]
+        except KeyError:
+            return {"error": "no_embed"}
 
     def reply_count(self):
-        for post in self._post():
-            yield post["replyCount"]
+        return self.feed["replyCount"]
 
     def repost_count(self):
-        for post in self._post():
-            yield post["repostCount"]
+        return self.feed["repostCount"]
 
     def like_count(self):
-        for post in self._post():
-            yield post["likeCount"]
+        return self.feed["likeCount"]
 
     def quote_count(self):
-        for post in self._post():
-            yield post["quoteCount"]
+        return self.feed["quoteCount"]
 
     def indexed_at(self):
-        for post in self._post():
-            yield post["indexedAt"]
+        return self.feed["indexedAt"]
