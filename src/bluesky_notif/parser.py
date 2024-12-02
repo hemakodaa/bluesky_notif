@@ -15,6 +15,10 @@ class Request:
     def _get(self):
         Request.PARAMS["actor"] = self.actor
         Request.PARAMS["limit"] = self.limit
+
+        # Possible values: [posts_with_replies, posts_no_replies, posts_with_media, posts_and_author_threads]
+        Request.PARAMS["filters"] = ["posts_no_replies"]
+
         # TODO: add request error handling
         with httpx.Client(params=Request.PARAMS) as client:
             r = client.get(Request.APPVIEW + Request.ENDPOINT, params=Request.PARAMS)
@@ -32,6 +36,20 @@ class Request:
 
 
 class FeedParser:
+    """
+    There are three top-level objects for every item in a 'feed' list:
+    1. Post (required, means it will always exist for every item)
+    2. Reply
+    3. Reason
+    These three will determine what kind of post an Actor (Actor = an account on bsky) just posted, along with the filters used in Request.PARAMS
+
+    A post that an actor writes, if it is NOT a reply or a repost, the item will NOT have a 'Reason' object. If an Actor reposted, that item will have a 'Post' and a 'Reason' object.
+
+    If an item has a 'Reply' object, it means this item is a reply to another post. The layout of the 'Post' and the 'Reply' object goes like this:
+    - 'Post' object contains information of the actor's reply. Makes sense, treating a reply as a 'post'.
+    - 'Reply' object contains the conversations between the Actors. Inside the 'Reply' object, there are several properties. The original post is under the 'root' property, whereas the post whom the Actor replied to is under the 'parent' property. We can tell who the author of the original post is via the 'grandparentAuthor' property.
+    """
+
     def __init__(self):
         self._feed_post = None
         self._feed_reply = None
@@ -59,6 +77,10 @@ class FeedParser:
 
     @property
     def reason(self) -> dict:
+        """
+        We can tell if a post is a repost or not through
+        reason object
+        """
         return self._feed_reason
 
     @reason.setter
