@@ -15,3 +15,14 @@ distribution = false
 [tool.pdm.scripts]
 start = "python src/bluesky_notif/main.py"
 parser = "python src/bluesky_notif/parser.py"
+
+[tool.pdm.dev-dependencies]
+test = [
+    "pytest>=8.3.4",
+]
+lint = [
+    "black>=24.10.0",
+]
+typing = [
+    "mypy>=1.13.0",
+]
