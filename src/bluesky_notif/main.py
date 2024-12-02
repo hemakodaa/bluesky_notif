@@ -1,17 +1,10 @@
-import httpx
-
-APPVIEW = "https://public.api.bsky.app"
-ENDPOINT = "/xrpc/app.bsky.feed.getAuthorFeed"
-ACTOR = "clara.phase-connect.com"
-PARAMS = {"actor": ACTOR, "limit": 10, "includePins": "true"}
+from parser import Request, FeedParser
 
 
 def main():
-    with httpx.Client(params=PARAMS) as client:
-        r = client.get(APPVIEW + ENDPOINT, params=PARAMS)
-        html = r.text()
-        # with open("example_response.json", "w+", encoding="utf-8") as file:
-        #     file.write(html)
+    r = Request("clara.phase-connect.com")
+    for post in FeedParser(r.feed()).record_text():
+        print(post)
 
 
 if __name__ == "__main__":
