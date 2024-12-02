@@ -7,12 +7,10 @@ def test_request():
 
 def test_parser_record_text_from_file():
     r = Request("clara.phase-connect.com")
-    feed = r.feed_from_file("example_response.json")
+    feeds = r.feed_from_file("example_response.json")
     p = FeedParser()
-    for post in feed:
-        p.post = post
-        p.reply = post
-        p.reason = post
+    for f in feeds:
+        p.feed = f
         p.reply_grandparentAuthor()
         p.reply_parent()
         p.reply_root()
@@ -31,12 +29,10 @@ def test_parser_record_text_from_file():
 
 def test_parser_record_text_from_request():
     r = Request("clara.phase-connect.com")
-    feed = r.feed()
+    feeds = r.feed()
     p = FeedParser()
-    for post in feed:
-        p.post = post
-        p.reply = post
-        p.reason = post
+    for f in feeds:
+        p.feed = f
         p.reply_grandparentAuthor()
         p.reply_parent()
         p.reply_root()

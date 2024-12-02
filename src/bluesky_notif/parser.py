@@ -54,6 +54,18 @@ class FeedParser:
         self._feed_post = None
         self._feed_reply = None
         self._feed_reason = None
+        self._feed = None
+
+    @property
+    def feed(self):
+        return self._feed
+
+    @feed.setter
+    def feed(self, feed: dict):
+        self._feed = feed
+        self._feed_post = feed.get("post")
+        self._feed_reply = feed.get("reply")
+        self._feed_reason = feed.get("reason")
 
     @property
     def post(self):
@@ -61,19 +73,11 @@ class FeedParser:
             raise ValueError("post is not set.")
         return self._feed_post
 
-    @post.setter
-    def post(self, feed: dict) -> dict:
-        self._feed_post = feed.get("post")
-
     @property
     def reply(self) -> dict:
         return (
             {"error": "no_feed_reply"} if self._feed_reply is None else self._feed_reply
         )
-
-    @reply.setter
-    def reply(self, feed: dict) -> dict:
-        self._feed_reply = feed.get("reply")
 
     @property
     def reason(self) -> dict:
@@ -82,10 +86,6 @@ class FeedParser:
         reason object
         """
         return self._feed_reason
-
-    @reason.setter
-    def reason(self, feed: dict) -> dict:
-        self._feed_reason = feed.get("reason")
 
     @staticmethod
     def default_count(count) -> int:

@@ -9,5 +9,5 @@ def test_failing_post_is_not_set():
     # p.post is not set
     with pytest.raises(ValueError) as excinfo:
         for post in feed:
-            p.post_author()()
+            p.post_author()
         print(excinfo.value)
