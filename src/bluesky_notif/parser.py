@@ -14,6 +14,7 @@ class Request:
     def _get(self):
         Request.PARAMS["actor"] = self.actor
         Request.PARAMS["limit"] = self.limit
+        # TODO: add request error handling
         with httpx.Client(params=Request.PARAMS) as client:
             r = client.get(Request.APPVIEW + Request.ENDPOINT, params=Request.PARAMS)
             return json.loads(r.text)
