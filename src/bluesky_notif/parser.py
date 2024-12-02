@@ -1,6 +1,7 @@
 import json
 import httpx
 from datetime import datetime
+from enum import Enum
 
 
 class Request:
@@ -87,6 +88,25 @@ class PostParser:
 
     def indexed_at(self):
         return datetime.fromisoformat(self._post.get("indexedAt"))
+
+
+class ReplyType(Enum):
+    POST_VIEW = "app.bsky.feed.defs#postView"
+    NOT_FOUND_POST = "app.bsky.feed.defs#notFoundPost"
+    BLOCKED_POST = "app.bsky.feed.defs#blockedPost"
+
+
+class ReasonType(Enum):
+    REPOST = "app.bsky.feed.defs#reasonRepost"
+    PIN = "app.bsky.feed.defs#reasonPin"
+
+
+class EmbedType(Enum):
+    IMAGES_VIEW = "app.bsky.embed.images#view"
+    VIDEO_VIEW = "app.bsky.embed.video#view"
+    EXTERNAL_VIEW = "app.bsky.embed.external#view"
+    RECORD_VIEW = "app.bsky.embed.record#view"
+    RECORD_WITH_MEDIA_VIEW = "app.bsky.embed.recordWithMedia#view"
 
 
 class ReplyParser:
