@@ -10,7 +10,7 @@ def test_parser_record_text_from_file():
     feed = r.feed_from_file("example_response.json")
     p = FeedParser()
     for post in feed:
-        p.post(post)
+        p.post = post
         p.author()
         p.cid()
         p.embed()
@@ -29,7 +29,7 @@ def test_parser_record_text_from_request():
     feed = r.feed()
     p = FeedParser()
     for post in feed:
-        p.post(post)
+        p.post = post
         p.author()
         p.cid()
         p.embed()

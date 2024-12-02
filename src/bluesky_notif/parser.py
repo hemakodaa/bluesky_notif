@@ -31,14 +31,15 @@ class FeedParser:
     def __init__(self):
         self.feed = None
 
-    def post(self, feed: dict):
-        """
-        This method mutates, maybe find a better way
-        """
-        self.feed = feed["post"]
+    @property
+    def post(self):
         if self.feed is None:
             raise ValueError("feed is type None. Author's feed is empty")
-        
+        return self.feed
+
+    @post.setter
+    def post(self, post: dict):
+        self.feed = post["post"]
 
     def record_text(self):
         """
@@ -47,38 +48,38 @@ class FeedParser:
         return self.record()["text"]
 
     def uri(self):
-        return self.feed["uri"]
+        return self.post["uri"]
 
     def cid(self):
-        return self.feed["cid"]
+        return self.post["cid"]
 
     def author(self):
-        return self.feed["author"]
+        return self.post["author"]
 
     def record(self):
         """
         Contains the post's text
         """
-        return self.feed["record"]
+        return self.post["record"]
 
     def embed(self):
         # not all posts have this
         try:
-            return self.feed["embed"]
+            return self.post["embed"]
         except KeyError:
             return {"error": "no_embed"}
 
     def reply_count(self):
-        return self.feed["replyCount"]
+        return self.post["replyCount"]
 
     def repost_count(self):
-        return self.feed["repostCount"]
+        return self.post["repostCount"]
 
     def like_count(self):
-        return self.feed["likeCount"]
+        return self.post["likeCount"]
 
     def quote_count(self):
-        return self.feed["quoteCount"]
+        return self.post["quoteCount"]
 
     def indexed_at(self):
-        return self.feed["indexedAt"]
+        return self.post["indexedAt"]
