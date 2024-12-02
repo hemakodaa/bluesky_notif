@@ -11,17 +11,22 @@ def test_parser_record_text_from_file():
     p = FeedParser()
     for post in feed:
         p.post = post
-        p.author()
-        p.cid()
-        p.embed()
-        p.indexed_at()
-        p.like_count()
-        p.quote_count()
-        p.record()
-        p.record_text()
-        p.reply_count()
-        p.repost_count()
-        p.uri()
+        p.reply = post
+        p.reason = post
+        p.reply_grandparentAuthor()
+        p.reply_parent()
+        p.reply_root()
+        p.post_author()
+        p.post_cid()
+        p.post_embed()
+        p.post_indexed_at()
+        p.post_like_count()
+        p.post_quote_count()
+        p.post_record()
+        p.post_record_text()
+        p.post_reply_count()
+        p.post_repost_count()
+        p.post_uri()
 
 
 def test_parser_record_text_from_request():
@@ -30,14 +35,19 @@ def test_parser_record_text_from_request():
     p = FeedParser()
     for post in feed:
         p.post = post
-        p.author()
-        p.cid()
-        p.embed()
-        p.indexed_at()
-        p.like_count()
-        p.quote_count()
-        p.record()
-        p.record_text()
-        p.reply_count()
-        p.repost_count()
-        p.uri()
+        p.reply = post
+        p.reason = post
+        p.reply_grandparentAuthor()
+        p.reply_parent()
+        p.reply_root()
+        p.post_author()
+        p.post_cid()
+        p.post_embed()
+        p.post_indexed_at()
+        p.post_like_count()
+        p.post_quote_count()
+        p.post_record()
+        p.post_record_text()
+        p.post_reply_count()
+        p.post_repost_count()
+        p.post_uri()
