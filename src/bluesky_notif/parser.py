@@ -153,9 +153,9 @@ class PostEmbedImageIterator(Iterator[EmbedTypeImage]):
         return EmbedTypeImage(item)
 
 
+@dataclass
 class PostEmbedVideo:
-    def __init__(self, embed: dict):
-        self._embed = embed
+    _embed: dict
 
     def cid(self):
         return self._embed.get("cid")
@@ -190,9 +190,9 @@ class PostEmbedExternal:
         return self._embed.get("thumb")
 
 
+@dataclass
 class PostEmbedRecord:
-    def __init__(self, embed: dict):
-        self._embed = embed
+    _embed: dict
 
     def record(self):
         """
@@ -201,9 +201,9 @@ class PostEmbedRecord:
         return self._embed.get("record")
 
 
+@dataclass
 class PostEmbedRecordWithMedia:
-    def __init__(self, embed: dict):
-        self._embed = embed
+    _embed: dict
 
     def media(self):
         # this has 3 possibilities: image, video and external
