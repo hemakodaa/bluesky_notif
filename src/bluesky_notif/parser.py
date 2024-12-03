@@ -1,5 +1,6 @@
 import json
 import httpx
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from collections.abc import Generator
@@ -64,9 +65,9 @@ class Request:
         return get["feed"]
 
 
+@dataclass
 class PostRecord:
-    def __init__(self, record: dict):
-        self._record = record
+    _record: dict
 
     def record_type(self):
         return self._record.get("$type")
@@ -102,9 +103,32 @@ class PostRecord:
         return self._record.get("langs")
 
 
+@dataclass
+class PostAuthor:
+    _author: dict
+
+    def did(self):
+        return self._author.get("did")
+
+    def handle(self):
+        return self._author.get("handle")
+
+    def display_name(self):
+        return self._author.get("displayName")
+
+    def avatar(self):
+        return self._author.get("avatar")
+
+    def labels(self):
+        return self._author.get("labels")
+
+    def created_at(self):
+        return self._author.get("createdAt")
+
+
+@dataclass
 class PostParser:
-    def __init__(self, post: dict):
-        self._post = post
+    _post: dict
 
     @staticmethod
     def _default_count(count) -> int:
@@ -116,8 +140,8 @@ class PostParser:
     def cid(self) -> str:
         return self._post.get("cid")
 
-    def author(self) -> dict:
-        return self._post.get("author")
+    def author(self) -> PostAuthor:
+        return PostAuthor(self._post.get("author"))
 
     def record(self) -> PostRecord:
         """
@@ -127,6 +151,7 @@ class PostParser:
 
     def embed(self) -> dict:
         # not all posts have this
+        # TODO: determine what type the embed is with EmbedType, and return the corresponding class/dataclass
         embed = self._post.get("embed")
         return {"error": "no_embed"} if embed is None else embed
 
