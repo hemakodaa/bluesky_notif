@@ -140,7 +140,11 @@ class EmbedTypeImage:
         return self._images.get("alt")
 
 
-class PostEmbedImage(Iterator):
+class PostEmbedImageIterator(Iterator[EmbedTypeImage]):
+    """
+    This class produces an iterator with the return type EmbedTypeImage
+    """
+
     def __init__(self, embed: dict):
         super().__init__()
         self._embed_images: list = embed.get("images")
@@ -151,6 +155,63 @@ class PostEmbedImage(Iterator):
             return EmbedTypeImage(item)
         except IndexError:
             raise StopIteration
+
+
+class PostEmbedVideo:
+    def __init__(self, embed: dict):
+        self._embed = embed
+
+    def cid(self):
+        return self._embed.get("cid")
+
+    def playlist(self):
+        return self._embed.get("playlist")
+
+    def thumbnail(self):
+        return self._embed.get("thumbnail")
+
+    def alt_text(self):
+        return self._embed.get("alt")
+
+    def aspect_ratio(self):
+        return self._embed.get("aspectRatio")
+
+
+@dataclass
+class PostEmbedExternal:
+    _embed: dict
+
+    def uri(self):
+        return self._embed.get("uri")
+
+    def title(self):
+        return self._embed.get("title")
+
+    def description(self):
+        return self._embed.get("description")
+
+    def thumbnail(self):
+        return self._embed.get("thumb")
+
+
+class PostEmbedRecord:
+    def __init__(self, embed: dict):
+        self._embed = embed
+
+    def record(self):
+        """
+        Priority information is here.
+        """
+        return self._embed.get("record")
+
+
+class PostEmbedRecordWithMedia:
+    def __init__(self, embed: dict):
+        self._embed = embed
+
+    def media(self):
+        # this has 3 possibilities: image, video and external
+        return self._embed.get("media")
 
 
 @dataclass
@@ -176,7 +237,7 @@ class PostParser:
         """
         return PostRecord(self._post.get("record"))
 
-    def embed(self) -> Iterator[EmbedTypeImage] | None:
+    def embed(self):
         # not all posts have this
         # TODO: determine what type the embed is with EmbedType, and return the corresponding class/dataclass
         embed: dict | None = self._post.get("embed")
@@ -186,7 +247,15 @@ class PostParser:
         match embed_type:
             # a custom return container type may be necessary for this match case, containing the type and the relevant information
             case EmbedType.IMAGES.value:
-                return PostEmbedImage(embed)
+                return PostEmbedImageIterator(embed)
+            case EmbedType.VIDEO.value:
+                return PostEmbedVideo(embed)
+            case EmbedType.EXTERNAL.value:
+                return PostEmbedExternal(embed)
+            case EmbedType.RECORD.value:
+                return PostEmbedRecord(embed)
+            case EmbedType.RECORD_WITH_MEDIA.value:
+                return PostEmbedRecordWithMedia(embed)
             case _:
                 return None  # placeholder
 
