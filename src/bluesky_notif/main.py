@@ -3,14 +3,20 @@ import json
 
 
 def main():
-    r = Request("clara.phase-connect.com", 1)
-    feeds = r.feed()
+    r = Request("clara.phase-connect.com")
+    feeds = r.feed_from_file("posts_no_replies.json")
     p = FeedParser()
     for f in feeds:
         p.feed = f
-        print(p.post_record_text())
-    # with open("test.json", "w") as file:
-    #     file.write(json.dumps({"feed": feed}))
+        post = p.post()
+        embed = post.embed()
+        if embed is None:
+            continue
+        for image in embed:
+            print(image.thumbnail())
+
+    # with open("posts_no_replies.json", "w") as file:
+    #     file.write(json.dumps({"feed": feeds}))
 
 
 if __name__ == "__main__":

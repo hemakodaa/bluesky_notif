@@ -3,7 +3,7 @@ import httpx
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
 
 
 class ReplyType(Enum):
@@ -19,11 +19,11 @@ class ReasonType(Enum):
 
 
 class EmbedType(Enum):
-    IMAGES_VIEW = "app.bsky.embed.images#view"
-    VIDEO_VIEW = "app.bsky.embed.video#view"
-    EXTERNAL_VIEW = "app.bsky.embed.external#view"
-    RECORD_VIEW = "app.bsky.embed.record#view"
-    RECORD_WITH_MEDIA_VIEW = "app.bsky.embed.recordWithMedia#view"
+    IMAGES = "app.bsky.embed.images#view"
+    VIDEO = "app.bsky.embed.video#view"
+    EXTERNAL = "app.bsky.embed.external#view"
+    RECORD = "app.bsky.embed.record#view"
+    RECORD_WITH_MEDIA = "app.bsky.embed.recordWithMedia#view"
     NONE = ""
 
 
@@ -127,6 +127,33 @@ class PostAuthor:
 
 
 @dataclass
+class EmbedTypeImage:
+    _images: dict
+
+    def thumbnail(self):
+        return self._images.get("thumb")
+
+    def fullsize(self):
+        return self._images.get("fullsize")
+
+    def alt_text(self):
+        return self._images.get("alt")
+
+
+class PostEmbedImage(Iterator):
+    def __init__(self, embed: dict):
+        super().__init__()
+        self._embed_images: list = embed.get("images")
+
+    def __next__(self) -> EmbedTypeImage:
+        try:
+            item: dict = self._embed_images.pop(0)
+            return EmbedTypeImage(item)
+        except IndexError:
+            raise StopIteration
+
+
+@dataclass
 class PostParser:
     _post: dict
 
@@ -149,11 +176,19 @@ class PostParser:
         """
         return PostRecord(self._post.get("record"))
 
-    def embed(self) -> dict:
+    def embed(self) -> Iterator[EmbedTypeImage] | None:
         # not all posts have this
         # TODO: determine what type the embed is with EmbedType, and return the corresponding class/dataclass
-        embed = self._post.get("embed")
-        return {"error": "no_embed"} if embed is None else embed
+        embed: dict | None = self._post.get("embed")
+        if not embed:
+            return None
+        embed_type = embed.get("$type")
+        match embed_type:
+            # a custom return container type may be necessary for this match case, containing the type and the relevant information
+            case EmbedType.IMAGES.value:
+                return PostEmbedImage(embed)
+            case _:
+                return None  # placeholder
 
     def reply_count(self) -> int:
         count = self._post.get("replyCount")
