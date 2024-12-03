@@ -146,15 +146,11 @@ class PostEmbedImageIterator(Iterator[EmbedTypeImage]):
     """
 
     def __init__(self, embed: dict):
-        super().__init__()
-        self._embed_images: list = embed.get("images")
+        self._embed_images: list = iter(embed.get("images", []))
 
     def __next__(self) -> EmbedTypeImage:
-        try:
-            item: dict = self._embed_images.pop(0)
-            return EmbedTypeImage(item)
-        except IndexError:
-            raise StopIteration
+        item = next(self._embed_images)
+        return EmbedTypeImage(item)
 
 
 class PostEmbedVideo:

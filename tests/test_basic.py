@@ -60,7 +60,7 @@ def parser(p: FeedParser, feeds: dict):
                 for image in embed:
                     image.alt_text()
                     image.fullsize()
-                    image.thumbnail()
+                    print(image.thumbnail())
             case PostEmbedVideo():
                 embed.cid()
                 embed.alt_text()
