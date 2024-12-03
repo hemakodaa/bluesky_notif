@@ -39,7 +39,7 @@ class Request:
         Request.PARAMS["limit"] = self.limit
 
         # Possible values: [posts_with_replies, posts_no_replies, posts_with_media, posts_and_author_threads]
-        Request.PARAMS["filters"] = ["posts_no_replies"]
+        Request.PARAMS["filter"] = ["posts_no_replies"]
 
         # TODO: add request error handling
         with httpx.Client(params=Request.PARAMS) as client:

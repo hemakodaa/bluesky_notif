@@ -3,6 +3,7 @@ test.json
 example_response.json
 posts_and_author_threads.json
 posts_with_replies.json
+posts_no_replies.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
