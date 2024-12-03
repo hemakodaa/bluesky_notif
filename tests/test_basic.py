@@ -58,7 +58,9 @@ def parser(p: FeedParser, feeds: dict):
         match embed:
             case PostEmbedImageIterator():
                 for image in embed:
-                    print(image)
+                    image.alt_text()
+                    image.fullsize()
+                    image.thumbnail()
             case PostEmbedVideo():
                 embed.cid()
                 embed.alt_text()
