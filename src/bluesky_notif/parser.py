@@ -4,6 +4,27 @@ from datetime import datetime
 from enum import Enum
 
 
+class ReplyType(Enum):
+    POST_VIEW = "app.bsky.feed.defs#postView"
+    NOT_FOUND_POST = "app.bsky.feed.defs#notFoundPost"
+    BLOCKED_POST = "app.bsky.feed.defs#blockedPost"
+
+
+class ReasonType(Enum):
+    REPOST = "app.bsky.feed.defs#reasonRepost"
+    PIN = "app.bsky.feed.defs#reasonPin"
+    NONE = ""
+
+
+class EmbedType(Enum):
+    IMAGES_VIEW = "app.bsky.embed.images#view"
+    VIDEO_VIEW = "app.bsky.embed.video#view"
+    EXTERNAL_VIEW = "app.bsky.embed.external#view"
+    RECORD_VIEW = "app.bsky.embed.record#view"
+    RECORD_WITH_MEDIA_VIEW = "app.bsky.embed.recordWithMedia#view"
+    NONE = ""
+
+
 class Request:
     APPVIEW = "https://public.api.bsky.app"
     ENDPOINT = "/xrpc/app.bsky.feed.getAuthorFeed"
@@ -36,6 +57,32 @@ class Request:
         return get["feed"]
 
 
+class PostRecord:
+    def __init__(self, record: dict):
+        self._record = record
+
+    def record_type(self):
+        return self._record.get("$type")
+
+    def text(self):
+        """
+        The post's text.
+        """
+        return self._record.get("text")
+
+    def created_at(self):
+        return self._record.get("createdAt")
+
+    def embed(self):
+        return self._record.get("embed")
+
+    def facets(self):
+        return self._record.get("facets")
+
+    def langs(self):
+        return self._record.get("langs")
+
+
 class PostParser:
     def __init__(self, post: dict):
         self._post = post
@@ -43,12 +90,6 @@ class PostParser:
     @staticmethod
     def _default_count(count) -> int:
         return 0 if count is None else count
-
-    def record_text(self):
-        """
-        The post's text.
-        """
-        return self.record().get("text")
 
     def uri(self) -> str:
         return self._post.get("uri")
@@ -59,11 +100,11 @@ class PostParser:
     def author(self) -> dict:
         return self._post.get("author")
 
-    def record(self) -> dict:
+    def record(self) -> PostRecord:
         """
         Contains the post's text
         """
-        return self._post.get("record")
+        return PostRecord(self._post.get("record"))
 
     def embed(self) -> dict:
         # not all posts have this
@@ -90,37 +131,21 @@ class PostParser:
         return datetime.fromisoformat(self._post.get("indexedAt"))
 
 
-class ReplyType(Enum):
-    POST_VIEW = "app.bsky.feed.defs#postView"
-    NOT_FOUND_POST = "app.bsky.feed.defs#notFoundPost"
-    BLOCKED_POST = "app.bsky.feed.defs#blockedPost"
-
-
-class ReasonType(Enum):
-    REPOST = "app.bsky.feed.defs#reasonRepost"
-    PIN = "app.bsky.feed.defs#reasonPin"
-
-
-class EmbedType(Enum):
-    IMAGES_VIEW = "app.bsky.embed.images#view"
-    VIDEO_VIEW = "app.bsky.embed.video#view"
-    EXTERNAL_VIEW = "app.bsky.embed.external#view"
-    RECORD_VIEW = "app.bsky.embed.record#view"
-    RECORD_WITH_MEDIA_VIEW = "app.bsky.embed.recordWithMedia#view"
-
-
 class ReplyParser:
     def __init__(self, reply: dict):
-        self._reply = reply
+        self._r = reply
 
-    def reply_root(self) -> dict:
-        return self._reply.get("root")
+    def _reply(self):
+        return self._r
 
-    def reply_parent(self) -> dict:
-        return self._reply.get("parent")
+    def root(self) -> dict:
+        return self._reply().get("root")
 
-    def reply_grandparentAuthor(self) -> dict:
-        grandparent_author = self._reply.get("grandparentAuthor")
+    def parent(self) -> dict:
+        return self._reply().get("parent")
+
+    def grandparent_author(self) -> dict:
+        grandparent_author = self._reply().get("grandparentAuthor")
         return (
             {"error": "no_feed_reply_grandparentAuthor"}
             if grandparent_author is None
@@ -129,8 +154,29 @@ class ReplyParser:
 
 
 class ReasonParser:
-    def __init__(self, reason: dict):
-        self._reply = reason
+    def __init__(self, reason: dict | None):
+        self._r = reason
+
+    def _reason(self) -> dict | None:
+        return {"$type": "", "by": "", "indexedAt": ""} if self._r is None else self._r
+
+    def reason_type(self) -> ReasonType:
+        t = self._reason().get("$type")
+        if not t:
+            return ReasonType.NONE
+        match t:
+            case ReasonType.REPOST.value:
+                return ReasonType.REPOST
+            case ReasonType.PIN.value:
+                return ReasonType.PIN
+
+    def by(self):
+        b = self._reason().get("by")
+        return "" if not b else b
+
+    def indexed_at(self):
+        i = self._reason().get("indexedAt")
+        return "" if not i else datetime.fromisoformat(i)
 
 
 class FeedParser:
@@ -167,17 +213,17 @@ class FeedParser:
 
     def post(self):
         if self._feed_post is None:
-            raise ValueError("post is not set.")
+            raise ValueError("feed is not set.")
         return PostParser(self._feed_post)
 
-    def reply(self) -> dict:
+    def reply(self) -> ReplyParser:
         return (
             ReplyParser({"error": "no_feed_reply"})
             if self._feed_reply is None
             else ReplyParser(self._feed_reply)
         )
 
-    def reason(self) -> dict:
+    def reason(self) -> ReasonParser:
         """
         We can tell if a post is a repost or not through
         reason object
