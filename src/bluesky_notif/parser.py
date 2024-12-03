@@ -2,6 +2,7 @@ import json
 import httpx
 from datetime import datetime
 from enum import Enum
+from collections.abc import Generator
 
 
 class ReplyType(Enum):
@@ -22,6 +23,12 @@ class EmbedType(Enum):
     EXTERNAL_VIEW = "app.bsky.embed.external#view"
     RECORD_VIEW = "app.bsky.embed.record#view"
     RECORD_WITH_MEDIA_VIEW = "app.bsky.embed.recordWithMedia#view"
+    NONE = ""
+
+
+class FacetType(Enum):
+    LINK = "app.bsky.richtext.facet#link"
+    TAG = "app.bsky.richtext.facet#tag"
     NONE = ""
 
 
@@ -76,8 +83,20 @@ class PostRecord:
     def embed(self):
         return self._record.get("embed")
 
-    def facets(self):
-        return self._record.get("facets")
+    def facets(self) -> Generator[FacetType | dict[str, FacetType | str]]:
+        facet: list | None = self._record.get("facets")
+        if not facet:
+            return FacetType.NONE
+        for item in facet:
+            features: list | None = item.get("features")
+            for f in features:
+                match f.get("$type"):
+                    case FacetType.LINK.value:
+                        yield {"type": FacetType.LINK, "uri": f.get("uri")}
+                    case FacetType.TAG.value:
+                        pass
+                    case _:
+                        yield {"type": FacetType.NONE, "uri": ""}
 
     def langs(self):
         return self._record.get("langs")
