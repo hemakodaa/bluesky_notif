@@ -16,6 +16,7 @@ def test_request():
 def parser(p: FeedParser, feeds: dict):
     for f in feeds:
         p.feed = f
+        p.determine_post_kind()
         post = p.post()
 
         author = post.author()
@@ -43,14 +44,16 @@ def parser(p: FeedParser, feeds: dict):
         post_record.facets()
 
         reply = p.reply()
-        reply.grandparent_author()
-        reply.parent()
-        reply.root()
+        if reply is not None:
+            reply.grandparent_author()
+            reply.parent()
+            reply.root()
 
         reason = p.reason()
-        reason.by()
-        reason.indexed_at()
-        reason.reason_type()
+        if reason is not None:
+            reason.by()
+            reason.indexed_at()
+            reason.reason_type()
 
         embed = post.embed()
         if embed is None:

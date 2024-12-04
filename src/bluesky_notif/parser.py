@@ -2,7 +2,7 @@ import json
 import httpx
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from enum import Enum, auto
 from collections.abc import Generator, Iterator
 
 
@@ -31,6 +31,14 @@ class FacetType(Enum):
     LINK = "app.bsky.richtext.facet#link"
     TAG = "app.bsky.richtext.facet#tag"
     NONE = ""
+
+
+class PostKind(Enum):
+    PLAIN_POST = auto()
+    POST_WITH_EMBED = auto()
+    REPOST = auto()
+    QUOTE = auto()
+    PIN = auto()
 
 
 class Request:
@@ -82,6 +90,9 @@ class PostRecord:
         return self._record.get("createdAt")
 
     def embed(self):
+        """
+        Quoted posts (a repost with text attached on top) count as embed. What makes it certain is the type of the embed. Check EmbedType enumeration for all possible embed types.
+        """
         return self._record.get("embed")
 
     def facets(self) -> Generator[FacetType | dict[str, FacetType | str]]:
@@ -233,9 +244,17 @@ class PostParser:
         """
         return PostRecord(self._post.get("record"))
 
+    def embed_type(self):
+        embed: dict | None = self._post.get("embed")
+        if not embed:
+            return None
+        t = embed.get("$type")
+        for member in EmbedType:
+            if member.value == t:
+                return member
+
     def embed(self):
         # not all posts have this
-        # TODO: determine what type the embed is with EmbedType, and return the corresponding class/dataclass
         embed: dict | None = self._post.get("embed")
         if not embed:
             return None
@@ -276,20 +295,20 @@ class PostParser:
 
 
 class ReplyParser:
-    def __init__(self, reply: dict):
+    def __init__(self, reply: dict | None):
         self._r = reply
 
-    def _reply(self):
+    def reply(self):
         return self._r
 
     def root(self) -> dict:
-        return self._reply().get("root")
+        return self.reply().get("root")
 
     def parent(self) -> dict:
-        return self._reply().get("parent")
+        return self.reply().get("parent")
 
     def grandparent_author(self) -> dict:
-        grandparent_author = self._reply().get("grandparentAuthor")
+        grandparent_author = self.reply().get("grandparentAuthor")
         return (
             {"error": "no_feed_reply_grandparentAuthor"}
             if grandparent_author is None
@@ -301,11 +320,11 @@ class ReasonParser:
     def __init__(self, reason: dict | None):
         self._r = reason
 
-    def _reason(self) -> dict | None:
-        return {"$type": "", "by": "", "indexedAt": ""} if self._r is None else self._r
+    def reason(self) -> dict | None:
+        return self._r
 
     def reason_type(self) -> ReasonType:
-        t = self._reason().get("$type")
+        t = self.reason().get("$type")
         if not t:
             return ReasonType.NONE
         match t:
@@ -315,11 +334,11 @@ class ReasonParser:
                 return ReasonType.PIN
 
     def by(self):
-        b = self._reason().get("by")
+        b = self.reason().get("by")
         return "" if not b else b
 
     def indexed_at(self):
-        i = self._reason().get("indexedAt")
+        i = self.reason().get("indexedAt")
         return "" if not i else datetime.fromisoformat(i)
 
 
@@ -355,21 +374,44 @@ class FeedParser:
         self._feed_reply = feed.get("reply")
         self._feed_reason = feed.get("reason")
 
+    def determine_post_kind(self):
+        if self._feed_reason is None:
+            post = self.post()
+            embed = post.embed()
+            if embed is None:
+                # a post with no embedded media is a plain post
+                return PostKind.PLAIN_POST
+            embed_type = post.embed_type()
+            match embed_type:
+                # embed of type record means it is quoting another post
+                case EmbedType.RECORD:
+                    return PostKind.QUOTE
+                # everything else is a post that is NOT a plain post, e.g. a post with an attached image
+                case _:
+                    return PostKind.POST_WITH_EMBED
+        reason = self.reason()
+        # reposts and pins are straightforward
+        match reason.reason_type():
+            case ReasonType.REPOST:
+                return PostKind.REPOST
+            case ReasonType.PIN:
+                return PostKind.PIN
+        pass
+
     def post(self):
         if self._feed_post is None:
             raise ValueError("feed is not set.")
         return PostParser(self._feed_post)
 
-    def reply(self) -> ReplyParser:
-        return (
-            ReplyParser({"error": "no_feed_reply"})
-            if self._feed_reply is None
-            else ReplyParser(self._feed_reply)
-        )
+    def reply(self) -> ReplyParser | None:
+        """
+        Only exist if the filters in request parameters is set to include replies
+        """
+        return None if self._feed_reply is None else ReplyParser(self._feed_reply)
 
     def reason(self) -> ReasonParser:
         """
         We can tell if a post is a repost or not through
         reason object
         """
-        return ReasonParser(self._feed_reason)
+        return None if self._feed_reason is None else ReasonParser(self._feed_reason)
