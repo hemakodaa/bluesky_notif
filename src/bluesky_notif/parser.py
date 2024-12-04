@@ -346,11 +346,11 @@ class FeedParser:
     """
     There are three top-level objects for every item in a 'feed' list:
     1. Post (required, means it will always exist for every item)
-    2. Reply
+    2. Reply (only exists if request parameters 'filter' includes posts which has replies)
     3. Reason
     These three will determine what kind of post an Actor (Actor = an account on bsky) just posted, along with the filters used in Request.PARAMS
 
-    A post that an actor writes, if it is NOT a reply or a repost, the item will NOT have a 'Reason' object. If an Actor reposted, that item will have a 'Post' and a 'Reason' object.
+    NOTE: BETTER EXPLANATION WILL BE GIVEN. For now, read the comments on FeedParser.determine_post_kind() for an idea of what combination of objects determines what post an actor just made.
 
     If an item has a 'Reply' object, it means this item is a reply to another post. The layout of the 'Post' and the 'Reply' object goes like this:
     - 'Post' object contains information of the actor's reply. Makes sense, treating a reply as a 'post'.
